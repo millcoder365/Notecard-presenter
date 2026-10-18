@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DeckCards</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f2a44">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f6f5f1;--surface:#fff;--text:#1d1d1b;--muted:#6b6a64;--line:#e3e1d9;--accent:#d9472b;--accent-t:#fff;--card:#1f2a44;--card-t:#f7f4ea;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141412;--surface:#1e1e1b;--text:#f0eee6;--muted:#a09e94;--line:#34332e;--accent:#ee6a4f;--accent-t:#141412;--card:#2b3858;--card-t:#f7f4ea}}
+:root[data-theme="dark"]{--bg:#141412;--surface:#1e1e1b;--text:#f0eee6;--muted:#a09e94;--line:#34332e;--accent:#ee6a4f;--accent-t:#141412;--card:#2b3858;--card-t:#f7f4ea}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:18px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.logo{font-weight:800;font-size:20px;letter-spacing:-.5px}.logo b{color:var(--accent)}
+button,input,textarea,select{font:inherit;color:inherit}
+.btn{background:var(--accent);color:var(--accent-t);border:0;border-radius:8px;padding:9px 16px;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+main{max-width:980px;margin:0 auto;padding:20px 18px 60px}
+h1{font-size:26px;margin:6px 0 16px;letter-spacing:-.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.deck{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}
+.deck:hover{border-color:var(--accent)}
+.deck .meta{padding:10px 14px 14px}.deck h3{margin:0 0 2px;font-size:16px}.deck small{color:var(--muted)}
+.thumb{aspect-ratio:16/9;background:var(--card);color:var(--card-t);display:flex;flex-direction:column;justify-content:center;padding:6%;overflow:hidden}
+.thumb b{font-size:18px;line-height:1.25}.thumb span{font-size:13px;opacity:.75;margin-top:4px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:12px}
+label{font-size:13px;color:var(--muted);display:grid;gap:4px}
+input,textarea,select{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%}
+textarea{min-height:200px;resize:vertical}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stage{background:var(--card);color:var(--card-t);aspect-ratio:16/9;border-radius:12px;display:flex;flex-direction:column;justify-content:center;padding:5% 6%;overflow:auto;position:relative;container-type:inline-size}
+.stage h2{font-size:calc(clamp(28px,7.5cqw,68px)*var(--ts,1));line-height:1.15;margin:0 0 .5em;letter-spacing:-.5px}
+.stage p,.stage li{font-size:calc(clamp(19px,4.6cqw,40px)*var(--ts,1));line-height:1.4;margin:0 0 .4em}
+.stage ul{margin:0;padding-left:1.2em}
+.stage .n{position:absolute;right:4%;bottom:4%;font-size:12px;opacity:.6}
+.bar{height:4px;background:var(--line);border-radius:4px;margin:12px 0;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);transition:width .2s}
+.nav{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.strip{display:flex;gap:8px;overflow-x:auto;padding:12px 0}
+.strip .mini{flex:0 0 130px;aspect-ratio:16/9;background:var(--card);color:var(--card-t);border-radius:6px;font-size:11px;padding:6px;overflow:hidden;cursor:pointer;border:2px solid transparent}
+.strip .mini.on{border-color:var(--accent)}
+.stage.full{position:fixed;inset:0;z-index:50;border-radius:0;aspect-ratio:auto}
+.stage{justify-content:safe center}
+.ts{display:flex;align-items:center;gap:10px;margin:0 0 12px}.ts input{padding:0;border:0;background:none;accent-color:var(--accent)}.ts output{min-width:3.2em;text-align:right;font-size:14px}
+.ts.full{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;background:rgba(0,0,0,.65);color:#fff;border-radius:10px;padding:8px 12px;margin:0}
+.hint{color:var(--muted);font-size:13px}
+.empty{text-align:center;color:var(--muted);padding:40px 0}
+</style>
+</head>
+<body>
+<header><div class="logo">Deck<b>Cards</b></div><div class="actions"><button class="btn ghost" id="home">Library</button><button class="btn" id="new">+ New deck</button></div></header>
+<main id="app"></main>
+<script>
+const KEY="deckcards.v1";
+let decks=[],view={name:"home"},idx=0,full=false,ts=1;
+try{ts=Math.min(2.2,Math.max(.6,+localStorage.getItem("deckcards.ts")||1))}catch(e){}
+document.documentElement.style.setProperty("--ts",ts);
+const sample={id:"d0",title:"Welcome to DeckCards",author:"you",created:Date.now(),cards:[
+{t:"Welcome to DeckCards",b:["Share ideas as swipeable slides."]},
+{t:"Text in, cards out",b:["- Paste any text","- Pick how to split it","- Get a deck instantly"]},
+{t:"Try it",b:["Tap “New deck” and paste an article, notes or an outline."]}]};
+try{decks=JSON.parse(localStorage.getItem(KEY)||"null")||[sample]}catch(e){decks=[sample]}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(decks))}catch(e){}}
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $=s=>document.querySelector(s);
+
+/* ---- text → cards ---- */
+function toCard(block){
+  let lines=block.split("\n").map(l=>l.trim()).filter(Boolean);
+  if(!lines.length)return null;
+  let t="";
+  if(/^#{1,6}\s/.test(lines[0])){t=lines.shift().replace(/^#+\s*/,"")}
+  else if(lines.length>1&&lines[0].length<=60&&!/[.!?]$/.test(lines[0])){t=lines.shift()}
+  return{t:t,b:lines.map(l=>l.replace(/^#{1,6}\s*/,""))};
+}
+function split(text,mode,n){
+  text=text.replace(/\r/g,"").trim();
+  if(!text)return[];
+  let blocks;
+  if(mode==="blank")blocks=text.split(/\n\s*\n+/);
+  else if(mode==="heading")blocks=text.split(/\n(?=#{1,6}\s)/);
+  else if(mode==="line")blocks=text.split("\n").filter(l=>l.trim());
+  else{
+    const s=text.replace(/\s+/g," ").match(/[^.!?]+[.!?]+["”’)]*|[^.!?]+$/g)||[text];
+    blocks=[];for(let i=0;i<s.length;i+=n)blocks.push(s.slice(i,i+n).join(" ").trim());
+    return blocks.map(b=>({t:"",b:[b]}));
+  }
+  return blocks.map(toCard).filter(Boolean);
+}
+
+/* ---- views ---- */
+function home(){
+  view={name:"home"};full=false;
+  $("#app").innerHTML=`<h1>Your decks</h1>`+(decks.length?`<div class="grid">${decks.map(d=>`
+  <div class="deck" data-id="${d.id}"><div class="thumb"><b>${esc(d.cards[0]?.t||d.title)}</b><span>${esc((d.cards[0]?.b||[]).join(" "))}</span></div>
+  <div class="meta"><h3>${esc(d.title)}</h3><small>${esc(d.author||"anonymous")} · ${d.cards.length} cards</small></div></div>`).join("")}</div>`:`<div class="empty">No decks yet. Create your first one.</div>`);
+  document.querySelectorAll(".deck").forEach(e=>e.onclick=()=>open(e.dataset.id));
+}
+function create(){
+  view={name:"create"};
+  $("#app").innerHTML=`<h1>New deck</h1><div class="panel">
+  <div class="row"><label>Title<input id="ti" placeholder="My talk"></label><label>Author<input id="au" placeholder="Your name"></label></div>
+  <label>Text<textarea id="tx" placeholder="Paste text here…"></textarea></label>
+  <div class="row"><label>Split into cards by<select id="mo"><option value="blank">Paragraphs (blank lines)</option><option value="heading">Headings (# Title)</option><option value="line">Each line</option><option value="sent">Sentences</option></select></label>
+  <label>Sentences per card<input id="sn" type="number" min="1" max="10" value="2"></label></div>
+  <div class="hint">First short line of a paragraph becomes the card title. Lines starting with - become bullets.</div>
+  <div id="pv" class="hint"></div>
+  <div class="actions"><button class="btn" id="mk">Create deck</button><button class="btn ghost" id="cn">Cancel</button></div></div>`;
+  const upd=()=>{$("#pv").textContent=split($("#tx").value,$("#mo").value,+$("#sn").value||2).length+" cards will be created"};
+  ["tx","mo","sn"].forEach(i=>$("#"+i).oninput=upd);upd();
+  $("#cn").onclick=home;
+  $("#mk").onclick=()=>{
+    const cards=split($("#tx").value,$("#mo").value,+$("#sn").value||2);
+    if(!cards.length){$("#pv").textContent="Add some text first.";return}
+    const d={id:"d"+Date.now(),title:$("#ti").value.trim()||cards[0].t||"Untitled deck",author:$("#au").value.trim(),created:Date.now(),cards};
+    decks.unshift(d);save();open(d.id);
+  };
+}
+function render(b){
+  let out="",list=[];
+  b.forEach(l=>{if(/^[-*•]\s+/.test(l))list.push(l.replace(/^[-*•]\s+/,""));else{if(list.length){out+=`<ul>${list.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;list=[]}out+=`<p>${esc(l)}</p>`}});
+  if(list.length)out+=`<ul>${list.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`;
+  return out;
+}
+function open(id){view={name:"deck",id};idx=0;full=false;show()}
+function show(){
+  const d=decks.find(x=>x.id===view.id);if(!d)return home();
+  const c=d.cards[idx],n=d.cards.length;
+  $("#app").innerHTML=`<h1>${esc(d.title)}</h1><div class="hint" style="margin:-10px 0 14px">${esc(d.author||"anonymous")}</div>
+  <div class="ts${full?" full":""}"><span>A</span><input type="range" id="tsr" min="60" max="220" step="10" value="${Math.round(ts*100)}" aria-label="Text size"><span style="font-size:1.5em">A</span><output id="tso">${Math.round(ts*100)}%</output></div>
+  <div class="stage${full?" full":""}" id="st">${c.t?`<h2>${esc(c.t)}</h2>`:""}${render(c.b)}<div class="n">${idx+1} / ${n}</div></div>
+  <div class="bar"><i style="width:${(idx+1)/n*100}%"></i></div>
+  <div class="nav"><div class="actions"><button class="btn ghost" id="pr">← Prev</button><button class="btn" id="nx">Next →</button></div>
+  <div class="actions"><button class="btn ghost" id="fs">Fullscreen</button><button class="btn ghost" id="dl">Delete</button></div></div>
+  <div class="strip">${d.cards.map((k,i)=>`<div class="mini${i===idx?" on":""}" data-i="${i}"><b>${esc(k.t||k.b[0]||"")}</b></div>`).join("")}</div>`;
+  $("#pr").onclick=()=>go(-1);$("#nx").onclick=()=>go(1);
+  $("#tsr").oninput=e=>{ts=e.target.value/100;document.documentElement.style.setProperty("--ts",ts);$("#tso").textContent=e.target.value+"%";try{localStorage.setItem("deckcards.ts",ts)}catch(_){}};
+  $("#fs").onclick=()=>{full=!full;show()};
+  $("#st").onclick=e=>{if(full)go(e.clientX<innerWidth/3?-1:1)};
+  $("#dl").onclick=()=>{if(confirm("Delete this deck?")){decks=decks.filter(x=>x.id!==d.id);save();home()}};
+  document.querySelectorAll(".mini").forEach(m=>m.onclick=()=>{idx=+m.dataset.i;show()});
+}
+function go(s){const d=decks.find(x=>x.id===view.id);idx=Math.max(0,Math.min(d.cards.length-1,idx+s));show()}
+document.addEventListener("keydown",e=>{
+  if(view.name!=="deck")return;
+  if(e.key==="ArrowRight"||e.key===" ")go(1);
+  else if(e.key==="ArrowLeft")go(-1);
+  else if(e.key==="Escape"&&full){full=false;show()}
+});
+$("#home").onclick=home;$("#new").onclick=create;
+home();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}))}
+</script>
+</body>
+</html>
